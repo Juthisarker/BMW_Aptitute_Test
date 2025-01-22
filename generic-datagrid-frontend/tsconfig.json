@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+      "target": "ES6",                         // Specifies the JavaScript language version.
+      "lib": ["DOM", "DOM.Iterable", "ESNext"], // Includes libraries for DOM and modern JavaScript features.
+      "module": "ESNext",                      // Uses ESNext module system for compatibility with modern React.
+      "moduleResolution": "Node",             // Resolves modules in the Node.js style.
+      "jsx": "react-jsx",                     // Enables the new JSX transform (React 17+).
+      "strict": true,                         // Enables all strict type-checking options.
+      "esModuleInterop": true,                // Ensures compatibility with CommonJS modules.
+      "skipLibCheck": true,                   // Skips type-checking of library declaration files.
+      "forceConsistentCasingInFileNames": true, // Enforces consistent casing in import paths.
+      "resolveJsonModule": true,              // Allows importing JSON files.
+      "isolatedModules": true,                // Ensures that every file can be safely transpiled in isolation.
+      "allowSyntheticDefaultImports": true,   // Allows default imports from modules without default exports.
+      "noEmit": true                          // Prevents emitting compiled JavaScript files.
+    },
+    "include": ["src"],                        // Includes the `src` directory for compilation.
+    "exclude": ["node_modules", "dist"]        // Excludes `node_modules` and build output directories.
+  }
+  
