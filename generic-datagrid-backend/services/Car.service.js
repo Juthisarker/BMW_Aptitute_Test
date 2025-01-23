@@ -1,4 +1,3 @@
-
 const Car = require('../models/car.model');
 
 class CarService {
@@ -15,17 +14,36 @@ class CarService {
     return Car.find();
   }
 
-  async search({ brand, model, minPrice, maxPrice }) {
+  async search(searchQuery) {
     try {
       const searchCriteria = {};
+      const searchableFields = [
+        'Brand', 'Model', 'RapidCharge', 'PowerTrain', 
+        'PlugType', 'BodyStyle', 'Segment'
+      ];
 
-      // Dynamically build the search query
-      if (brand) searchCriteria.Brand = new RegExp(brand, 'i'); // Case-insensitive match for Brand
-      if (model) searchCriteria.Model = new RegExp(model, 'i'); // Case-insensitive match for Model
-      if (minPrice) searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $gte: parseFloat(minPrice) }; // Minimum Price
-      if (maxPrice) searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $lte: parseFloat(maxPrice) }; // Maximum Price
+      // If searchQuery is a string, search across all searchable fields
+      if (typeof searchQuery === 'string' && searchQuery.trim()) {
+        const searchRegex = new RegExp(searchQuery.trim(), 'i');
+        searchCriteria.$or = searchableFields.map(field => ({
+          [field]: searchRegex
+        }));
+      } else if (typeof searchQuery === 'object') {
+        // Handle specific field searches
+        Object.entries(searchQuery).forEach(([key, value]) => {
+          if (value && value.trim()) {
+            if (key === 'minPrice') {
+              searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $gte: parseFloat(value) };
+            } else if (key === 'maxPrice') {
+              searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $lte: parseFloat(value) };
+            } else {
+              searchCriteria[key] = new RegExp(value.trim(), 'i');
+            }
+          }
+        });
+      }
 
-      return await Car.find(searchCriteria); // Query the database
+      return await Car.find(searchCriteria);
     } catch (error) {
       throw new Error(`Failed to search cars: ${error.message}`);
     }
@@ -33,62 +51,78 @@ class CarService {
 
   async filter({ column, criteria, value }) {
     try {
-      if (!column || !criteria) {
-        throw new Error('Column and criteria are required for filtering');
+      if (!column) {
+        throw new Error('Column is required for filtering');
       }
 
-      const filter = {}; // Initialize the filter object
+      // Get the schema field type
+      const fieldType = Car.schema.paths[column]?.instance;
+      if (!fieldType) {
+        throw new Error(`Invalid column: ${column}`);
+      }
 
-      // Build the filter based on criteria
-      switch (criteria.toLowerCase()) {
+      const filter = {};
+
+      // Handle empty criteria case first
+      if (criteria === 'isempty') {
+        filter[column] = { $in: [null, ''] };
+        return await Car.find(filter);
+      }
+
+      // Validate value is provided for non-empty criteria
+      if (!value && criteria !== 'isempty') {
+        throw new Error('Value is required for the specified criteria');
+      }
+
+      // Build the filter based on criteria and field type
+      switch (criteria?.toLowerCase()) {
         case 'contains':
-          filter[column] = new RegExp(value, 'i'); // Case-insensitive partial match
+          if (fieldType === 'Number') {
+            filter[column] = parseFloat(value);
+          } else {
+            filter[column] = new RegExp(value, 'i');
+          }
           break;
         case 'equals':
-          filter[column] = value; // Exact match
+          if (fieldType === 'Number') {
+            filter[column] = parseFloat(value);
+          } else {
+            filter[column] = value;
+          }
           break;
         case 'startswith':
-          filter[column] = new RegExp(`^${value}`, 'i'); // Starts with
+          if (fieldType === 'Number') {
+            throw new Error('startswith criteria is not applicable for numeric fields');
+          }
+          filter[column] = new RegExp(`^${value}`, 'i');
           break;
         case 'endswith':
-          filter[column] = new RegExp(`${value}$`, 'i'); // Ends with
+          if (fieldType === 'Number') {
+            throw new Error('endswith criteria is not applicable for numeric fields');
+          }
+          filter[column] = new RegExp(`${value}$`, 'i');
           break;
-        case 'isempty':
-          filter[column] = { $in: [null, ''] }; // Field is null or an empty string
+        case 'greaterthan':
+          if (fieldType !== 'Number') {
+            throw new Error('greaterthan criteria is only applicable for numeric fields');
+          }
+          filter[column] = { $gt: parseFloat(value) };
+          break;
+        case 'lessthan':
+          if (fieldType !== 'Number') {
+            throw new Error('lessthan criteria is only applicable for numeric fields');
+          }
+          filter[column] = { $lt: parseFloat(value) };
           break;
         default:
           throw new Error(`Unknown criteria: ${criteria}`);
       }
 
-      // Query the database with the built filter
       return await Car.find(filter);
     } catch (error) {
       throw new Error(`Failed to filter cars: ${error.message}`);
     }
   }
-  // async filter({ column, condition, value }) {
-  //   const query = {};
-  //   switch (condition) {
-  //     case 'Contains':
-  //       query[column] = { $regex: value, $options: 'i' };
-  //       break;
-  //     case 'Equals':
-  //       query[column] = value;
-  //       break;
-  //     case 'Starts with':
-  //       query[column] = { $regex: `^${value}`, $options: 'i' };
-  //       break;
-  //     case 'Ends with':
-  //       query[column] = { $regex: `${value}$`, $options: 'i' };
-  //       break;
-  //     case 'IsEmpty':
-  //       query[column] = { $exists: false };
-  //       break;
-  //     default:
-  //       throw new Error('Invalid filter condition');
-  //   }
-  //   return Car.find(query);
-  // }
 
   async delete(id) {
     return Car.findByIdAndDelete(id);

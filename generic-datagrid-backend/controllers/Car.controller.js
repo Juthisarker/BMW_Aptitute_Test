@@ -67,30 +67,101 @@ class CarController {
 
   async searchCars(req, res) {
     try {
-      const { brand, model, minPrice, maxPrice } = req.query;
-      const cars = await CarService.search({ brand, model, minPrice, maxPrice });
+      const { q } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: 'Search query is required' });
+      }
+
+      const searchQuery = q.toLowerCase();
+      const cars = await this.getAllCars();
+      
+      const results = cars.filter(car => {
+        return Object.values(car).some(value => 
+          String(value).toLowerCase().includes(searchQuery)
+        );
+      });
+
+      res.json(results);
+    } catch (error) {
+      console.error('Error searching cars:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  async filterCars(req, res) {
+    try {
+      const { column, criteria, value } = req.query;
+      
+      if (!column || !criteria) {
+        return res.status(400).json({ error: 'Column and criteria are required' });
+      }
+
+      const cars = await this.getAllCars();
+      
+      const results = cars.filter(car => {
+        const fieldValue = String(car[column]).toLowerCase();
+        const filterValue = value ? value.toLowerCase() : '';
+
+        switch (criteria) {
+          case 'contains':
+            return fieldValue.includes(filterValue);
+          case 'equals':
+            return fieldValue === filterValue;
+          case 'startswith':
+            return fieldValue.startsWith(filterValue);
+          case 'endswith':
+            return fieldValue.endsWith(filterValue);
+          case 'isempty':
+            return !fieldValue || fieldValue.trim() === '';
+          default:
+            return true;
+        }
+      });
+
+      res.json(results);
+    } catch (error) {
+      console.error('Error filtering cars:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  async searchCarsOld(req, res) {
+    try {
+      // Handle both query string search and specific field search
+      const searchQuery = req.query.q || req.query;
+      const cars = await CarService.search(searchQuery);
       res.status(200).json(cars);
     } catch (error) {
       res.status(500).json({ error: 'Failed to search cars', details: error.message });
     }
   }
 
-  // async filterCars(req, res) {
-  //   try {
-  //     const cars = await CarService.filter(req.body);
-  //     res.status(200).json(cars);
-  //   } catch (error) {
-  //     res.status(500).json({ error: 'Failed to filter cars', details: error.message });
-  //   }
-  // }
-
-  async filterCars(req, res) {
+  async filterCarsOld(req, res) {
     try {
-      const { column, criteria, value } = req.query; // Extract filter parameters
-      const cars = await CarService.filter({ column, criteria, value }); // Call service method
-      res.status(200).json(cars); // Respond with filtered data
+      const { column, criteria, value } = req.query;
+      
+      // Basic validation
+      if (!column) {
+        return res.status(400).json({ error: 'Column parameter is required' });
+      }
+      if (!criteria) {
+        return res.status(400).json({ error: 'Criteria parameter is required' });
+      }
+      if (!value && criteria.toLowerCase() !== 'isempty') {
+        return res.status(400).json({ error: 'Value parameter is required for non-empty criteria' });
+      }
+
+      const cars = await CarService.filter({ column, criteria, value });
+      res.status(200).json(cars);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to filter cars', details: error.message }); // Handle errors
+      // Handle specific error cases
+      if (error.message.includes('Invalid column')) {
+        return res.status(400).json({ error: error.message });
+      }
+      if (error.message.includes('not applicable')) {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to filter cars', details: error.message });
     }
   }
 

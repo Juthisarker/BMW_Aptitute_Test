@@ -10,7 +10,7 @@ const router = express.Router();
 router.post('/upload', CarController.uploadCsv);
 router.get('/allCars', CarController.getAllCars);
 router.get('/search', CarController.searchCars);
-router.post('/filter', CarController.filterCars);
+router.get('/filter', CarController.filterCars);
 router.delete('/:id', CarController.deleteCar);
 router.get('/hello', CarController.hello);
 
