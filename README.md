@@ -8,4 +8,7 @@ This guide explains how to set up and run the Generic Datagrid application, incl
 
 ### 1. Clone the Repository
    ```bash
-   git clone 
+   git clone
+### 2. Navigate to the Backend Directory
+ ```bash
+cd generic-datagrid-backend
