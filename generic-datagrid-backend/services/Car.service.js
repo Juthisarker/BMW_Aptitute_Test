@@ -14,40 +14,6 @@ class CarService {
     return Car.find();
   }
 
-  // async search(searchQuery) {
-  //   try {
-  //     const searchCriteria = {};
-  //     const searchableFields = [
-  //       'Brand', 'Model', 'RapidCharge', 'PowerTrain', 
-  //       'PlugType', 'BodyStyle', 'Segment'
-  //     ];
-
-  //     // If searchQuery is a string, search across all searchable fields
-  //     if (typeof searchQuery === 'string' && searchQuery.trim()) {
-  //       const searchRegex = new RegExp(searchQuery.trim(), 'i');
-  //       searchCriteria.$or = searchableFields.map(field => ({
-  //         [field]: searchRegex
-  //       }));
-  //     } else if (typeof searchQuery === 'object') {
-  //       // Handle specific field searches
-  //       Object.entries(searchQuery).forEach(([key, value]) => {
-  //         if (value && value.trim()) {
-  //           if (key === 'minPrice') {
-  //             searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $gte: parseFloat(value) };
-  //           } else if (key === 'maxPrice') {
-  //             searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $lte: parseFloat(value) };
-  //           } else {
-  //             searchCriteria[key] = new RegExp(value.trim(), 'i');
-  //           }
-  //         }
-  //       });
-  //     }
-
-  //     return await Car.find(searchCriteria);
-  //   } catch (error) {
-  //     throw new Error(`Failed to search cars: ${error.message}`);
-  //   }
-  // }
 
   async search(searchQuery) {
     try {

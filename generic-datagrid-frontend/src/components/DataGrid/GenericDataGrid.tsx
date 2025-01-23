@@ -319,7 +319,7 @@ export function GenericDataGrid<T>({
           </Typography>
         )}
 
-        <div className="ag-theme-material" style={{ height: '550px', width: '100%' }}>
+        <div className="ag-theme-material" style={{ height: '530px', width: '100%' }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />

@@ -1,6 +1,6 @@
 // src/routes/car.routes.js
 const express = require('express');
-const CarController = require('../controllers/car.controller');
+const CarController = require('../controllers/Car.controller');
 const multer = require('multer');
 
 const router = express.Router();
@@ -13,7 +13,5 @@ router.get('/search', CarController.searchCars);
 router.get('/filter', CarController.filterCars);
 router.get('/:id', CarController.findById);
 router.delete('/:id', CarController.deleteCar);
-
-router.get('/hello', CarController.hello);
 
 module.exports = router;

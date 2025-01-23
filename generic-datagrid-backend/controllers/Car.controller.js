@@ -110,9 +110,6 @@ class CarController {
     }
   }
 
-  async hello(req, res) {
-    res.status(200).json({ message: 'Car ggggggggggggggggggggg successfully' });
-  }
 
   async findById(req, res) {
     try {
