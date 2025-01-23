@@ -8,7 +8,7 @@ This guide explains how to set up and run the Generic Datagrid application, incl
 
 ### 1. Clone the Repository
    ```bash
-   git clone
+   git clone https://github.com/Juthisarker/BMW_Aptitute_Test.git
  ```
 ### 2. Navigate to the Backend Directory
  ```bash
