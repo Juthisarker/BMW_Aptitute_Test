@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import {GenericDataGrid } from './components/DataGrid/GenericDataGrid';
-// import DetailsPage from './components/DetailsPage';
+import { GenericDataGrid } from './components/DataGrid/GenericDataGrid';
+import DetailsPage from './components/DataGrid/DetailsPage';
 import { ApiService } from './services/api.service';
 import { ModuleRegistry } from 'ag-grid-community';
 import { ClientSideRowModelModule } from 'ag-grid-community';
@@ -39,9 +39,16 @@ const App: React.FC = () => {
       <Routes>
         <Route
           path="/"
-          element={<GenericDataGrid endpoint="allCars" columnDefs={columnDefs} title="Electric Cars" viewPath={''} />}
+          element={
+            <GenericDataGrid
+              endpoint="allCars"
+              columnDefs={columnDefs}
+              title="Electric Cars"
+              viewPath="/details"
+            />
+          }
         />
-        {/* <Route path="/details/:id" element={<DetailsPage />} /> */}
+        <Route path="/details/:id" element={<DetailsPage />} />
       </Routes>
     </Router>
   );

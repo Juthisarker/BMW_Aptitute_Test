@@ -58,4 +58,14 @@ export class ApiService {
       throw error;
     }
   }
+
+  async fetchRecordById<T>(endpoint: string, id: string): Promise<T> {
+    try {
+      const response = await axios.get<T>(`${this.baseUrl}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching record by ID:', error);
+      throw error;
+    }
+  }
 }

@@ -86,6 +86,7 @@ export function GenericDataGrid<T>({
         try {
           await apiService.deleteRecord(endpoint, id);
           setRowData((prev) => prev.filter((row) => (row as any).id !== id));
+          loadData();
         } catch (deleteError) {
           console.error('Error deleting record:', deleteError);
         }
@@ -318,7 +319,7 @@ export function GenericDataGrid<T>({
           </Typography>
         )}
 
-        <div className="ag-theme-material" style={{ height: '600px', width: '100%' }}>
+        <div className="ag-theme-material" style={{ height: '550px', width: '100%' }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />

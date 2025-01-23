@@ -157,6 +157,18 @@ class CarService {
   async delete(id) {
     return Car.findByIdAndDelete(id);
   }
+
+  async findById(id) {
+    try {
+      const car = await Car.findById(id);
+      if (!car) {
+        throw new Error('Car not found');
+      }
+      return car;
+    } catch (error) {
+      throw new Error(`Error finding car: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new CarService();

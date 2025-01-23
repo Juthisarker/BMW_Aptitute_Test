@@ -113,6 +113,17 @@ class CarController {
   async hello(req, res) {
     res.status(200).json({ message: 'Car ggggggggggggggggggggg successfully' });
   }
+
+  async findById(req, res) {
+    try {
+      const { id } = req.params;
+      const car = await CarService.findById(id);
+      res.json(car);
+    } catch (error) {
+      res.status(error.message.includes('not found') ? 404 : 500)
+        .json({ error: error.message });
+    }
+  }
 }
 
 module.exports = new CarController();
