@@ -14,35 +14,75 @@ class CarService {
     return Car.find();
   }
 
+  // async search(searchQuery) {
+  //   try {
+  //     const searchCriteria = {};
+  //     const searchableFields = [
+  //       'Brand', 'Model', 'RapidCharge', 'PowerTrain', 
+  //       'PlugType', 'BodyStyle', 'Segment'
+  //     ];
+
+  //     // If searchQuery is a string, search across all searchable fields
+  //     if (typeof searchQuery === 'string' && searchQuery.trim()) {
+  //       const searchRegex = new RegExp(searchQuery.trim(), 'i');
+  //       searchCriteria.$or = searchableFields.map(field => ({
+  //         [field]: searchRegex
+  //       }));
+  //     } else if (typeof searchQuery === 'object') {
+  //       // Handle specific field searches
+  //       Object.entries(searchQuery).forEach(([key, value]) => {
+  //         if (value && value.trim()) {
+  //           if (key === 'minPrice') {
+  //             searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $gte: parseFloat(value) };
+  //           } else if (key === 'maxPrice') {
+  //             searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $lte: parseFloat(value) };
+  //           } else {
+  //             searchCriteria[key] = new RegExp(value.trim(), 'i');
+  //           }
+  //         }
+  //       });
+  //     }
+
+  //     return await Car.find(searchCriteria);
+  //   } catch (error) {
+  //     throw new Error(`Failed to search cars: ${error.message}`);
+  //   }
+  // }
+
   async search(searchQuery) {
     try {
-      const searchCriteria = {};
-      const searchableFields = [
+      // If no search query, return all records
+      if (!searchQuery || searchQuery.trim() === '') {
+        return await Car.find({});
+      }
+  
+      const searchValue = searchQuery.trim();
+      const isNumeric = !isNaN(parseFloat(searchValue));
+  
+      // Define searchable fields
+      const textFields = [
         'Brand', 'Model', 'RapidCharge', 'PowerTrain', 
         'PlugType', 'BodyStyle', 'Segment'
       ];
-
-      // If searchQuery is a string, search across all searchable fields
-      if (typeof searchQuery === 'string' && searchQuery.trim()) {
-        const searchRegex = new RegExp(searchQuery.trim(), 'i');
-        searchCriteria.$or = searchableFields.map(field => ({
-          [field]: searchRegex
-        }));
-      } else if (typeof searchQuery === 'object') {
-        // Handle specific field searches
-        Object.entries(searchQuery).forEach(([key, value]) => {
-          if (value && value.trim()) {
-            if (key === 'minPrice') {
-              searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $gte: parseFloat(value) };
-            } else if (key === 'maxPrice') {
-              searchCriteria.PriceEuro = { ...searchCriteria.PriceEuro, $lte: parseFloat(value) };
-            } else {
-              searchCriteria[key] = new RegExp(value.trim(), 'i');
-            }
-          }
-        });
-      }
-
+  
+      const numericFields = [
+        'PriceEuro', 'AccelSec', 'Range_Km'
+      ];
+  
+      // Build search criteria
+      const searchCriteria = {
+        $or: [
+          // Search text fields
+          ...textFields.map(field => ({
+            [field]: { $regex: searchValue, $options: 'i' }
+          })),
+          // Search numeric fields if the search value is a number
+          ...(isNumeric ? numericFields.map(field => ({
+            [field]: parseFloat(searchValue)
+          })) : [])
+        ]
+      };
+  
       return await Car.find(searchCriteria);
     } catch (error) {
       throw new Error(`Failed to search cars: ${error.message}`);
@@ -51,21 +91,23 @@ class CarService {
 
   async filter({ column, criteria, value }) {
     try {
+      // Validate column
       if (!column) {
         throw new Error('Column is required for filtering');
       }
-
-      // Get the schema field type
+      
       const fieldType = Car.schema.paths[column]?.instance;
+      
       if (!fieldType) {
         throw new Error(`Invalid column: ${column}`);
       }
-
+  
+      // Build the filter object
       const filter = {};
 
-      // Handle empty criteria case first
-      if (criteria === 'isempty') {
-        filter[column] = { $in: [null, ''] };
+      // Handle empty criteria
+     if (criteria === 'isempty') {
+        filter[column] = { $in: [null, '', '-'] };
         return await Car.find(filter);
       }
 
@@ -73,8 +115,8 @@ class CarService {
       if (!value && criteria !== 'isempty') {
         throw new Error('Value is required for the specified criteria');
       }
-
-      // Build the filter based on criteria and field type
+  
+        // Handle other criteria
       switch (criteria?.toLowerCase()) {
         case 'contains':
           if (fieldType === 'Number') {
@@ -102,27 +144,15 @@ class CarService {
           }
           filter[column] = new RegExp(`${value}$`, 'i');
           break;
-        case 'greaterthan':
-          if (fieldType !== 'Number') {
-            throw new Error('greaterthan criteria is only applicable for numeric fields');
-          }
-          filter[column] = { $gt: parseFloat(value) };
-          break;
-        case 'lessthan':
-          if (fieldType !== 'Number') {
-            throw new Error('lessthan criteria is only applicable for numeric fields');
-          }
-          filter[column] = { $lt: parseFloat(value) };
-          break;
         default:
           throw new Error(`Unknown criteria: ${criteria}`);
       }
-
       return await Car.find(filter);
     } catch (error) {
       throw new Error(`Failed to filter cars: ${error.message}`);
     }
   }
+  
 
   async delete(id) {
     return Car.findByIdAndDelete(id);

@@ -65,83 +65,22 @@ class CarController {
     }
   }
 
+
   async searchCars(req, res) {
     try {
-      const { q } = req.query;
-      if (!q) {
-        return res.status(400).json({ error: 'Search query is required' });
-      }
-
-      const searchQuery = q.toLowerCase();
-      const cars = await this.getAllCars();
-      
-      const results = cars.filter(car => {
-        return Object.values(car).some(value => 
-          String(value).toLowerCase().includes(searchQuery)
-        );
-      });
-
+      const results = await CarService.search(req.query.q);
       res.json(results);
     } catch (error) {
-      console.error('Error searching cars:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: error.message });
     }
   }
 
   async filterCars(req, res) {
     try {
       const { column, criteria, value } = req.query;
-      
-      if (!column || !criteria) {
-        return res.status(400).json({ error: 'Column and criteria are required' });
-      }
-
-      const cars = await this.getAllCars();
-      
-      const results = cars.filter(car => {
-        const fieldValue = String(car[column]).toLowerCase();
-        const filterValue = value ? value.toLowerCase() : '';
-
-        switch (criteria) {
-          case 'contains':
-            return fieldValue.includes(filterValue);
-          case 'equals':
-            return fieldValue === filterValue;
-          case 'startswith':
-            return fieldValue.startsWith(filterValue);
-          case 'endswith':
-            return fieldValue.endsWith(filterValue);
-          case 'isempty':
-            return !fieldValue || fieldValue.trim() === '';
-          default:
-            return true;
-        }
-      });
-
-      res.json(results);
-    } catch (error) {
-      console.error('Error filtering cars:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-
-  async searchCarsOld(req, res) {
-    try {
-      // Handle both query string search and specific field search
-      const searchQuery = req.query.q || req.query;
-      const cars = await CarService.search(searchQuery);
-      res.status(200).json(cars);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to search cars', details: error.message });
-    }
-  }
-
-  async filterCarsOld(req, res) {
-    try {
-      const { column, criteria, value } = req.query;
-      
-      // Basic validation
-      if (!column) {
+  
+      // Validate input
+       if (!column) {
         return res.status(400).json({ error: 'Column parameter is required' });
       }
       if (!criteria) {
@@ -151,19 +90,15 @@ class CarController {
         return res.status(400).json({ error: 'Value parameter is required for non-empty criteria' });
       }
 
-      const cars = await CarService.filter({ column, criteria, value });
-      res.status(200).json(cars);
+      const results = await CarService.filter({ column, criteria, value });
+  
+      res.status(200).json(results);
     } catch (error) {
-      // Handle specific error cases
-      if (error.message.includes('Invalid column')) {
-        return res.status(400).json({ error: error.message });
-      }
-      if (error.message.includes('not applicable')) {
-        return res.status(400).json({ error: error.message });
-      }
-      res.status(500).json({ error: 'Failed to filter cars', details: error.message });
+      console.error('Error filtering cars:', error);
+      res.status(500).json({ error: 'Internal server error', details: error.message });
     }
   }
+  
 
   async deleteCar(req, res) {
     try {
