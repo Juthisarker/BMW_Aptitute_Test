@@ -8,7 +8,7 @@ const { Readable } = require('stream');
 class CarController {
   async uploadCsv(req, res) {
     try {
-      const filePath = path.resolve(__dirname,'../BMW_Aptitude_Test_Test_Data_ElectricCarData.csv');
+      const filePath = path.resolve(__dirname,'../data.csv');
 
       // Check if the file exists
       if (!fs.existsSync(filePath)) {
